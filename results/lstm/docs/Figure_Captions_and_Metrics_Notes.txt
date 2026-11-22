@@ -1,0 +1,39 @@
+LSTM RESULTS: REPORT/PRESENTATION FIGURE CAPTIONS
+
+Figure 1. Overall and spike-specific forecasting error.
+Caption: Mean test-error ratios for each anomaly-feature and loss configuration, normalized against the raw-feature MSE baseline. Values below 1.0 indicate lower error than the baseline. Results are averaged across 11 traces, three random seeds, and CPU/memory targets.
+
+Figure 2. Underprediction behaviour.
+Caption: Mean overall and spike-period underprediction-rate ratios relative to the raw-feature MSE baseline. Values below 1.0 indicate fewer underprediction events; values above 1.0 indicate more.
+
+Figure 3. Resource-wise effect of the selected configuration.
+Caption: Percentage change in test MSE and MAE, overall and during spike periods, for severity-score features with the mild cost-sensitive loss relative to the raw-feature baseline, shown separately for CPU and memory.
+
+Figure 4. Trace-wise consistency.
+Caption: Trace-level overall MSE ratios relative to the raw-feature baseline across all configurations. The heatmap shows whether observed gains are consistent across individual workload traces rather than being driven only by the aggregate average.
+
+Figure 5. Random-seed sensitivity.
+Caption: Mean test MSE ratio relative to the baseline for each random seed. Similar values across seeds indicate that the observed configuration-level effect is not strongly dependent on a single initialization.
+
+Figure 6. Forecast bias.
+Caption: Mean signed forecast bias, calculated as actual demand minus predicted demand, for each configuration and resource. Positive values indicate average underprediction; negative values indicate average overprediction.
+
+Figure 7. Validation-to-test generalization.
+Caption: Mean validation and test MSE across configurations. The comparison provides a basic check of whether configuration rankings and error levels carry over from validation to the held-out test split.
+
+Figure 8. Absolute errors by resource.
+Caption: Absolute test MSE, MAE, spike MSE, and spike MAE for the raw-feature baseline and the selected severity-score plus mild cost-sensitive configuration, reported separately for CPU and memory.
+
+Suggested main-slide figures:
+- Main results slide: Figures 1 and 2.
+- Ablation/robustness slide: Figures 3 and 4.
+- Appendix/report: Figures 5–8.
+
+Metrics available directly in the supplied ZIP:
+MSE, MAE, spike_MSE, spike_MAE, under_rate, spike_under_rate, and bias_actual_minus_pred.
+
+Metrics NOT present in the supplied ZIP:
+SR, Total Predicted Resources (TPR), Overprediction (OP), Underprediction amount (UP), predictive interval bounds, and calibration error. These cannot be reconstructed from the aggregate CSVs because the ZIP does not contain saved upper prediction bounds or the required interval-calibration outputs. Do not report these as measured LSTM results from this run.
+
+Important interpretation:
+The ratios are paired against the raw_mse baseline for the same trace, seed, split, and resource. They are relative ratios, not raw metric values. The summary averages rows equally across trace, seed, and resource. For absolute CPU-versus-memory comparisons, use the resource-separated table/figure because the two targets may have different scales.

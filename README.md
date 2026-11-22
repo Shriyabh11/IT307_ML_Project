@@ -101,19 +101,19 @@ IT307_ML_Project/
 
 ### 1. LSTM (Deterministic Forecaster)
 - **Baseline Notebook**: [`baseline/code/lstm_workload_forecasting_baseline.ipynb`](baseline/code/lstm_workload_forecasting_baseline.ipynb)
-- **Baseline Results**: [`results/baseline/lstm/`](results/baseline/lstm) — Publication figures (heatmaps, experiment vs. paper, TPR vs. SR, calibration diagnostics, residual diagnostics, learning curves) + data inventory CSVs. Visual index: [`contact_sheet.png`](results/baseline/lstm/figures/contact_sheet.png).
+- **Baseline Results**: [`results/baseline/lstm/`](results/baseline/lstm/) — Publication figures (heatmaps, experiment vs. paper, TPR vs. SR, calibration diagnostics, residual diagnostics, learning curves) + data inventory CSVs. Visual index: [`contact_sheet.png`](results/baseline/lstm/figures/contact_sheet.png).
 - **Novelty Notebook**: [`code/lstm_workload_forecasting.ipynb`](code/lstm_workload_forecasting.ipynb)
-- **Novelty Results**: [`results/novelty/lstm/`](results/novelty/lstm) — Paired anomaly/raw ratios, under-prediction penalties, signed prediction bias, and sensitivity across seeds. Visual index: [`contact_sheet.jpg`](results/novelty/lstm/figures/contact_sheet.jpg).
+- **Novelty Results**: [`results/novelty/lstm/`](results/novelty/lstm/) — Paired anomaly/raw ratios, under-prediction penalties, signed prediction bias, and sensitivity across seeds. Visual index: [`contact_sheet.jpg`](results/novelty/lstm/figures/contact_sheet.jpg).
 
 ### 2. LSTMD (Probabilistic Forecaster)
 - **Baseline Notebook**: [`baseline/code/lstmd_workload_forecasting_baseline.ipynb`](baseline/code/lstmd_workload_forecasting_baseline.ipynb)
-- **Baseline Results**: [`results/baseline/lstmd/figures/`](results/baseline/lstmd/figures) — Heatmaps (`02_mse_heatmap_*.png`), Table 1 vs. paper (`05_table1_*.png`, `06_paper_comparison_*.png`), service rate curves (`08_service_rate_*.png`), TPR (`09_tpr_*.png`), and training logs (`13_training_history_*.png`). Visual index: [`contact_sheet.png`](results/baseline/lstmd/figures/contact_sheet.png).
+- **Baseline Results**: [`results/baseline/lstmd/`](results/baseline/lstmd/) — Heatmaps (`02_mse_heatmap_*.png`), Table 1 vs. paper (`05_table1_*.png`, `06_paper_comparison_*.png`), service rate curves (`08_service_rate_*.png`), TPR (`09_tpr_*.png`), and training logs (`13_training_history_*.png`). Visual index: [`contact_sheet.png`](results/baseline/lstmd/figures/contact_sheet.png).
 - **Novelty Notebook**: [`code/lstmd_workload_forecasting.ipynb`](code/lstmd_workload_forecasting.ipynb)
-- **Novelty Results**: [`results/novelty/lstmd/`](results/novelty/lstmd) — Includes direct paired ratio comparisons (`04_anomaly_raw_error_ratio.png`), spike detection case studies (`15_spike_detection_case_study.png`), and complete LaTeX publication report (`lstmd_results_section.tex`). Visual index: [`contact_sheet.jpg`](results/novelty/lstmd/figures/contact_sheet.jpg).
+- **Novelty Results**: [`results/novelty/lstmd/`](results/novelty/lstmd/) — Includes direct paired ratio comparisons (`04_anomaly_raw_error_ratio.png`), spike detection case studies (`15_spike_detection_case_study.png`), and complete LaTeX publication report (`lstmd_results_section.tex`). Visual index: [`contact_sheet.jpg`](results/novelty/lstmd/figures/contact_sheet.jpg).
 
 ### 3. HBNN (Bayesian Neural Network)
 - **Baseline Standalone Notebook**: [`baseline/code/hbnn_workload_forecasting_baseline.ipynb`](baseline/code/hbnn_workload_forecasting_baseline.ipynb)
 - **Baseline Script & Utilities**: [`baseline/code/hbnn_training.py`](baseline/code/hbnn_training.py), [`baseline/code/hbnn_benchmark.ipynb`](baseline/code/hbnn_benchmark.ipynb)
-- **Baseline Results**: [`results/baseline/hbnn/`](results/baseline/hbnn) — Figures (`service_confidence_vs_sr_ts80.png`, `service_tpr_vs_sr_ts80.png`), error CSVs, and training runtimes.
+- **Baseline Results**: [`results/baseline/hbnn/`](results/baseline/hbnn/) — Figures (`service_confidence_vs_sr_ts80.png`, `service_tpr_vs_sr_ts80.png`), error CSVs, and training runtimes.
 - **Novelty Notebook**: [`code/hbnn_workload_forecasting.ipynb`](code/hbnn_workload_forecasting.ipynb)
-- **Novelty Results**: [`results/novelty/hbnn/`](results/novelty/hbnn) — Direct paired ratios (`03_mse_paired_ratio.png`), uncertainty decomposition (`04_uncertainty_decomposition.png`), and spike MSE/under-prediction (`11_spike_mse.png`, `13_spike_underprediction.png`). Visual index: [`contact_sheet.jpg`](results/novelty/hbnn/figures/contact_sheet.jpg).
+- **Novelty Results**: [`results/novelty/hbnn/`](results/novelty/hbnn/) — Direct paired ratios (`03_mse_paired_ratio.png`), uncertainty decomposition (`04_uncertainty_decomposition.png`), and spike MSE/under-prediction (`11_spike_mse.png`, `13_spike_underprediction.png`). Visual index: [`contact_sheet.jpg`](results/novelty/hbnn/figures/contact_sheet.jpg).

@@ -49,6 +49,9 @@ We generate three auxiliary channels for each time step using an ensemble voting
 ```text
 IT307_ML_Project/
 ├── README.md                                          # Master documentation (Baseline + Novelty)
+├── report/                                            # Final IEEE Conference Report & Manuscript
+│   ├── final.tex                                      # 8-page IEEE conference paper source
+│   └── README.md                                      # Compilation & asset guide
 ├── reference_paper/                                   # Reference Research Paper (Rossi et al., 2025)
 │   └── Rossi2025_Forecasting_Workload_in_Cloud_Computing.pdf
 │

@@ -1,0 +1,749 @@
+% IEEE conference format -- final draft (8-page version)
+\documentclass[conference]{IEEEtran}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{newtxtext,newtxmath}
+\usepackage{amsmath,bm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{array,booktabs,multirow,calc}
+\usepackage{etoolbox}
+\usepackage{placeins}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+\usepackage{bookmark}
+\urlstyle{same}
+
+\setlist{nosep,leftmargin=*}
+\renewcommand{\arraystretch}{1.05}
+\setlength{\emergencystretch}{2em}
+\setkeys{Gin}{width=\columnwidth,keepaspectratio}
+
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{3pt}
+\setlength{\belowcaptionskip}{0pt}
+
+\newcommand{\figimg}[1]{\IfFileExists{#1}{\includegraphics[width=\columnwidth,height=0.30\textheight,keepaspectratio]{#1}}{\fbox{\parbox{0.95\columnwidth}{\centering Figure asset not found: \texttt{\detokenize{#1}}}}}}
+\newcommand{\figimgw}[1]{\IfFileExists{#1}{\includegraphics[width=\textwidth,height=0.28\textheight,keepaspectratio]{#1}}{\fbox{\parbox{0.95\textwidth}{\centering Figure asset not found: \texttt{\detokenize{#1}}}}}}
+
+% Author cell: name, affiliation, email
+\newcommand{\authorcell}[2]{%
+\parbox[t]{0.315\textwidth}{\centering\footnotesize
+\textbf{#1}\\
+\textit{Department of Information Technology}\\
+\textit{National Institute of Technology Karnataka}\\
+Surathkal, Mangalore -- 575025\\
+{\scriptsize #2}}}
+
+\hypersetup{
+  pdftitle={Anomaly-Aware Workload Forecasting for Cloud Resource Management},
+  pdfauthor={Shriya Bharadwaj; Rohith A M; Sanskruti Hiwase; Rufsina A; Nagamma Patil},
+  pdfcreator={LaTeX}
+}
+
+\begin{document}
+
+\title{Anomaly-Aware Workload Forecasting for Cloud Resource Management}
+
+\author{
+\authorcell{Shriya Bharadwaj}{shriyabharadwaj.241ai039@nitk.edu.in}
+\hfill
+\authorcell{Rohith A M}{rohith.241ai030@nitk.edu.in}
+\hfill
+\authorcell{Sanskruti Hiwase}{sanskrutisandeephiwase.241ai035@nitk.edu.in}
+\\[6pt]
+\hfill
+\authorcell{Rufsina A}{rufsina.247it007@nitk.edu.in}
+\hspace{2em}
+\authorcell{Nagamma Patil}{nagammapatil@nitk.edu.in}
+\hfill
+}
+\maketitle
+
+\begin{abstract}
+Cloud resource managers must forecast CPU and memory demand ahead of time:
+underestimates risk service-level violations, while overestimates waste
+resources. We show that anomaly-aware inputs can make workload forecasters more
+accurate and more efficient. We derive binary anomaly flags and continuous
+severity scores from four complementary detectors (robust Z-score, jump
+detection, EMA residual, Isolation Forest) and feed them to LSTM, probabilistic
+LSTM (LSTMD) and Hybrid Bayesian Neural Network (HBNN) forecasters. The combination of severity values and an asymmetric loss function slightly improved the model, resulting in a 7.7\% reduction in MSE, 7.8\% reduction in spike MSE and 7.3\% reduction in overall under-prediction across 11 data traces from Google and Alibaba. For
+uncertainty-aware forecasting, anomaly features reduce the resources needed to
+meet a 95\% service target in multi-trace HBNN (from 129\% to 116\% of demand for
+M-B) while raising the realized service rate from 93.7\% to 95.8\%, and LSTMD
+stays within 1.5 percentage points of its target service level.Improvements depend on the model and data used. LSTM improvements are not statistically significant (Wilcoxin $p=0.21$) across 11 traces. However, HBNN improvements are most significant when baseline performance is poor. We therefore suggest that anomaly aware input features are a reliable and cost effective solution to performance improvement across a range of models.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Anomaly detection, cloud computing, LSTM, resource provisioning,
+service-level metrics, time-series forecasting, workload prediction.
+\end{IEEEkeywords}
+
+%==============================================================
+\section{Introduction}\label{introduction}
+
+Cloud platforms must provision CPU and memory before demand arrives, so
+accurate workload forecasts are central to resource management. Forecasting
+errors are asymmetric. If workload is underpredicted, an application may lack
+resources, which slows operations or violates service-level requirements; if it
+is overpredicted, resources are wasted. A point forecast also gives no
+indication of how uncertain it is. Rossi et al.~\cite{ref1} address this with
+probabilistic LSTM (LSTMD) and Hybrid Bayesian Neural Networks (HBNN), which
+estimate predictive uncertainty.
+
+We first implemented the LSTM, LSTMD and HBNN models of~\cite{ref1} and
+evaluated them on Google and Alibaba cloud workloads. Sudden workload spikes
+were particularly difficult to forecast, which matters because underpredicting a
+spike can leave insufficient resources allocated. We therefore investigated two
+complementary ideas. We add anomaly indicators and scores to the historical data. The point forecast LSTM is trained with a slightly asymmetric loss function, where low predicted spikes are weighted more heavily. Both the LSTMD and HBNN models are trained with the anomaly aware inputs and Gaussian negative log likelihood loss functions.
+
+The contributions of this study are:
+\begin{itemize}
+\item A multi-signal feature pipeline that combines robust statistical
+detectors with Isolation Forest to represent unusual CPU and memory behavior.
+\item An evaluation of these anomaly-aware inputs across point and
+uncertainty-aware architectures (LSTM, LSTMD, HBNN).
+\item An ablation of anomaly flags, severity scores and an asymmetric
+spike-weighted loss for the LSTM (not applied to LSTMD or HBNN).
+\item A multi-model evidence base (eleven traces, three architectures, 132 LSTM
+fits) showing where anomaly features help: gains on 8 of 11 traces for the best
+LSTM configuration, lower provisioning cost for multi-trace HBNN, and only
+additional input channels as overhead.
+\end{itemize}
+
+The paper is structured as follows. Section~\ref{related-work}
+discusses related work, Section~\ref{reference-models-and-reproduction} describes the reference models and reproduction setup, Section~\ref{dataset-and-preprocessing}
+describes the data, Section~\ref{proposed-methodology} the methodology,
+Section~\ref{experimental-evaluation} the evaluation, Section~\ref{results-and-analysis} the results and limitations and finally Section~\ref{conclusion-and-future-work} concludes.
+
+%==============================================================
+\section{Related Work}\label{related-work}
+
+\textbf{Workload forecasting.} Dinda and O'Hallaron used linear models for host
+load prediction~\cite{ref2}, and Calheiros et al.\ used ARIMA for provisioning~\cite{ref3}.
+Machine learning has since captured more complex patterns~\cite{ref4}; LSTMs
+learn dependencies between observations~\cite{ref5,ref6}, convolutional and
+recurrent networks have been combined for VM and server workloads~\cite{ref7,ref8},
+and transformer and ensemble methods target long-term patterns~\cite{ref9,ref10,ref11}.
+
+\textbf{Uncertainty-aware forecasting.} Confidence intervals, kernel estimation,
+quantile regression and probabilistic networks quantify forecast confidence~\cite{ref12,ref13}.
+Networks that predict distribution parameters capture aleatoric
+uncertainty~\cite{ref14}, and Bayesian neural networks capture epistemic
+uncertainty~\cite{ref15}. Rossi et al.~\cite{ref1,ref16} applied probabilistic LSTM
+and HBNN to cloud workloads; their work is our main reference.
+
+\textbf{Anomaly detection and cost-sensitive forecasting.} Anomaly detection
+identifies observations that differ from normal behavior~\cite{ref17} while Isolation Forest isolates anomalies by random splits~\cite{ref18}, and the median
+absolute deviation (MAD) gives a robust deviation measure. Under-estimation of resources is often more costly than over-estimation. This can be modelled with asymmetric loss functions, and quantile regression. Here, we propose to combine anomaly information with weighted under-estimations of peaks.
+
+%==============================================================
+\section{Reference Models and Reproduction}\label{reference-models-and-reproduction}
+
+\subsection{Reference Forecasting Models}\label{forecasting-models}
+
+The reference paper~\cite{ref1} investigates three models: an \textbf{LSTM}
+that predicts future workload from past observations; \textbf{LSTMD}, which
+predicts the mean and standard deviation of a Gaussian (aleatoric uncertainty);
+and \textbf{HBNN}, with Bayesian layers and probabilistic weights (epistemic
+uncertainty). All forecast future utilization from past CPU and memory
+utilization using a window of 288 observations (24 hours at five-minute
+intervals) and a horizon of two steps (ten minutes). The LSTM uses causal 1D
+convolutions, an LSTM and dense layers; LSTMD outputs distribution parameters
+and is trained with negative log-likelihood; HBNN adds a variational Bayesian
+layer. Following~\cite{ref1}, configurations are named by training data (S:
+single-trace, M: multi-trace), prediction task (U: univariate, B: bivariate) and
+model, e.g.\ M-B-HBNN.
+
+\subsection{Service-Level Metrics}\label{service-level-metrics}
+
+A model can predict an upper bound $U_{\gamma,i}$ on demand for a target
+service level $\gamma$. A model can predict an upper bound on resource demand,
+chosen to meet a target service level. The Service Rate (SR) is the
+proportion of test observations whose actual workload does not exceed the allocated resource:
+\begin{equation}
+SR = \frac{1}{N}\sum_{i=1}^{N} I(y_i \leq U_{\gamma,i}),\qquad
+TPR = \frac{\sum_{i=1}^{N} U_{\gamma,i}}{\sum_{i=1}^{N} y_i}\times 100.
+\end{equation}
+A lower TPR at the same SR indicates more efficient provisioning.
+
+\subsection{Reproduction Methodology}\label{reproduction-methodology}
+
+We followed the reference methodology with the same window and horizon. The
+reproduced LSTMD and HBNN rows of Table~\ref{tab:repro} are the raw-input runs of
+the same pipelines used for the extensions: the final 20\% of each trace (by
+target index) is the test set, and of the preceding 80\% the first 80\% of
+windows train and the last 20\% validate, giving about 64/16/20 overall. The
+S-B-LSTM row is \emph{not} a reference-style reproduction: it equals the
+\emph{raw\_mse} baseline of the LSTM ablation (Section~\ref{anomaly-aware-lstm-ablation}),
+which uses a wider architecture and a 70/10/20 split.
+
+LSTMD used the reference per-configuration hyperparameters, one seed, up to 500
+epochs with early stopping disabled and best-validation weights restored. HBNN
+used the reference M-B hyperparameters for every configuration (no
+per-configuration search): one 1D convolution (16 filters, kernel 3), an LSTM
+with 32 units, two dense layers of 32 units and a variational dense layer of
+width 8, trained with negative log-likelihood and 100 stochastic forward passes
+at prediction (200 epochs, patience 20, batch 128, Adam $10^{-3}$, weight decay
+$10^{-4}$, seeds 0--2). The LSTM ablation used 100 epochs, patience 12, batch
+256, Adam ($10^{-3}$, clipnorm 1) with learning-rate reduction on plateau and
+seeds 0--2.
+
+%==============================================================
+\section{Dataset and Preprocessing}\label{dataset-and-preprocessing}
+
+\subsection{Trace Description and Preprocessing}\label{trace-description-and-preprocessing}
+
+We used CPU and memory utilization from the Google Cluster and Alibaba Cluster
+datasets, aggregated into five-minute intervals (eleven traces:
+Table~\ref{tab:traces}). Alibaba 2018 data (2000 samples) is excluded. Data is preprocessed by grouping into 5 minute intervals, then replacing NaN/infinite samples, filling missing values (remaining missing values are filled using the training median), and scaling between $[0,1]$, based on training data. For the LSTM ablation, the input and output data are also standardized according to trainingset statistics.
+
+\begin{table}[!t]
+\caption{Workload traces used (Alibaba 2018 excluded).}
+\label{tab:traces}
+\centering
+\scriptsize
+\begin{tabular}{@{}llr@{}}
+\toprule
+Source & Traces & Points \\
+\midrule
+Google 2011 & gc11 & 8,352 \\
+Google 2019 & gc19 a--h & 8,352 each \\
+Alibaba 2020 & ali20 c, ali20 g & 13,904 each \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Time-Based Data Splitting}\label{time-based-data-splitting}
+
+All models are given time-based windows. For the ablated LSTM model 70\% of the data was used for model training, 10\% for validation, and the remaining 20\% for testing. For the LSTMD, and HBNN models, 64\%, 16\%, and 20\% of the data was used for training, validation and testing respectively. The test data is reserved for final evaluation. The validation data is used for early stopping, best model selection and recovery of best weights.
+
+Detector fitting used different cutoffs: the LSTM and LSTMD pipelines fit the
+Isolation Forest on the first 70\% of each trace and the HBNN pipeline on the
+first 80\%. This corresponds to the training period for the LSTM model. For LSTMD and HBNN, the validation period is also considered. The last testing period is never used. In practice, this causes reduced comparability between models. In future work, all detectors should be re-trained only on training data.
+
+%==============================================================
+\section{Proposed Methodology}\label{proposed-methodology}
+
+\subsection{Multi-Signal Anomaly Detection}\label{multi-signal-anomaly-detection}
+
+Workload data contain spikes, short-term fluctuations and outliers. We use four
+detector signals (Fig.~\ref{fig:pipeline}), computed causally (shifted by one
+step) and separately for CPU and memory:
+\begin{description}
+\item[Robust Z-score.] Distance from the rolling median, scaled by the MAD:
+\begin{equation}
+R_t = \frac{x_t-\operatorname{Median}(x)}{1.4826\times \operatorname{MAD}(x)+\epsilon},
+\end{equation}
+with median and MAD over a trailing window and a scale floor preventing division by zero.
+\item[Jump Z-score.] The difference $d_t=x_t-x_{t-1}$ divided by a robust scale
+of past differences; large values indicate a sudden increase in demand.
+\item[EMA residual.] $r_t=x_t-\mathrm{EMA}_t$, normalized by a rolling scale,
+is large when the observation departs from the recent trend.
+\item[Isolation Forest.] Flags observations that are easily isolated in a
+feature space built from the signals above.
+\end{description}
+Settings are in Table~\ref{tab:hparams}. The LSTM and LSTMD pipelines share one
+detector implementation (the LSTM loads precomputed flag files whose flag rates
+match it), whereas the HBNN pipeline uses a separate implementation that
+differs in the EMA form, scale estimator, Isolation Forest size and features,
+and fitting cutoff.
+
+\begin{figure}[!t]
+\centering
+\figimg{anomaly_detection_pipeline.png}
+\caption{Multi-signal anomaly detection and feature generation.}
+\label{fig:pipeline}
+\end{figure}
+
+\textbf{Anomaly voting and severity.} Each z-score detector votes when its
+positive score exceeds 3.0; the Isolation Forest votes when its score exceeds
+the 95th percentile of the fitting prefix and $R_t>0$. With votes
+$v_{R,t},v_{J,t},v_{E,t},v_{I,t}$, the binary flag is
+\begin{equation}
+f_t=I\Big[\sum_{k\in\{R,J,E,I\}}v_{k,t}\geq 2 \;\land\; R_t>0\Big],
+\end{equation}
+restricting it to workload increases. The continuous severity score in $[0,1]$ is the average of four normalized scores which are z-score divided by 6 and clipped to $[0,1]$ for each model, and the Isolation Forest score rescaled between the fitting-prefix threshold and maximum and gated by $R_t>0$.
+
+\begin{table}[!t]
+\caption{Detector settings by pipeline.}
+\label{tab:hparams}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lll}
+\toprule
+Setting & LSTM / LSTMD & HBNN \\
+\midrule
+Rolling window (median, MAD) & 36 steps & 36 steps \\
+Robust / jump scale & $1.4826\cdot$MAD, floor $\propto\sigma_{\mathrm{train}}$ & $1.4826\cdot$MAD $+10^{-6}$ \\
+EMA & span 12 & $\alpha=0.15$ \\
+Residual scale & EW std (span 36) & rolling MAD \\
+Z-score vote threshold & 3.0 & 3.0 \\
+Isolation Forest & 300 trees, seed 42 & 100 trees, seed 7 \\
+IF features & $R,J,E$, variance ratio, $x$, $d$ & $R,J,E$ \\
+IF threshold; minimum votes & 95th pct.\ of fit prefix; 2 & 95th pct.\ of fit prefix; 2 \\
+Detector fit prefix & first 70\% & first 80\% \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Forecasting Models}\label{forecasting-models-1}
+
+Anomalies were incorporated in each model with the baseline input as $X_t=[\mathrm{CPU}_t,\mathrm{Memory}_t]$ over 288 steps. In the anomaly-aware models additional channels were included. These include (i) binary anomaly indicators for the CPU and memory, (ii) severity scores in a continuous format, or (iii) both. The architecture of the LSTM model (Fig.~\ref{fig:lstm}) includes a causal convolution with GELU activation and layer normalisation. This is followed by a residual block with causal convolutions, bi-LSTM over the 288 time-steps, temporal attention pooling, and two dense layers (64 units with a drop-out rate of 0.15). Input and target variables are normalised based on training data. LSTMD and HBNN follow~\cite{ref1}
+(HBNN: Fig.~\ref{fig:hbnn}).
+
+Anomaly-aware models append (i) binary flags, (ii) severity scores, or (iii)
+both, per resource; for LSTMD and HBNN, univariate inputs have three channels
+(workload, flag, score) and bivariate inputs six.
+
+\begin{figure}[!t]
+\centering
+\figimg{lstm_architecture.png}
+\caption{LSTM forecasting model with anomaly-aware inputs.}
+\label{fig:lstm}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\figimg{hbnn_architecture.png}
+\caption{Hybrid Bayesian Neural Network (HBNN) forecasting model.}
+\label{fig:hbnn}
+\end{figure}
+
+\subsection{Asymmetric and Spike-Aware Loss}\label{asymmetric-and-spike-aware-loss-function}
+
+Underpredictions can be more expensive, so they receive a larger weight. With
+standardized error $e_i^{(r)}=y_i^{(r)}-\hat{y}_i^{(r)}$ for resource $r$ (positive
+means underprediction) and a binary spike label $s_i^{(r)}$ (the target's change
+from the last observed input exceeds the 95th percentile of such changes in the
+training data), the objective is
+\begin{equation}
+\mathcal{L}=\frac{1}{2N}\sum_{i=1}^{N}\sum_{r\in\{\mathrm{CPU},\mathrm{mem}\}}w_i^{(r)}\big(e_i^{(r)}\big)^2,
+\end{equation}
+\begin{equation}
+w_i^{(r)}=1+(\alpha-1)\,I\!\left(e_i^{(r)}>0\right)+\lambda\, s_i^{(r)}\, I\!\left(e_i^{(r)}>0\right).
+\label{eq:weights}
+\end{equation}
+Here $\alpha\ge1$ penalizes underprediction and $\lambda\ge0$ adds weight to
+underpredicted spikes; $\alpha=1,\lambda=0$ gives the average of the CPU and
+memory MSEs. The spike label only weights the training loss (computed from the
+training-set threshold) and is never an input. \emph{score\_mild1} uses
+$\alpha=1.25$, $\lambda=0.25$; the screened \emph{mild2} variants use
+$1.5$/$0.5$. LSTMD and HBNN models use Gaussian negative log-likelihood training.
+
+\subsection{Ablation Study}\label{ablation-study}
+
+For the 12 different LSTM models, with four different input types (raw, flag, score, flag+score), three loss functions (MSE, Huber, slightly skewed spike aware), and two wider versions, validation results were calculated for 3 traces (gc11, gc19\_e, ali20\_g) across three different seeds. A shortlist of four is created, keeping \emph{raw\_mse} as reference, and evaluated it on the test split of all eleven traces:
+\emph{raw\_mse}, \emph{score\_mse}, \emph{score\_mild1} and \emph{all\_mse}. The
+shortlist is not simply the top validation configurations (on validation CPU
+MSE, \emph{score\_mild1} was level with \emph{raw\_mse}, 0.0526 vs.\ 0.0525;
+on memory it ranked second, 0.0316 vs.\ 0.0349). Only raw features with the asymmetric loss were screened so the gains of attributes to features versus loss are limited. LSTMD and HBNN were run with raw and anomaly-aware inputs only.
+
+%==============================================================
+\section{Experimental Evaluation}\label{experimental-evaluation}
+
+\subsection{Point Forecast Measures}\label{point-forecast-measures}
+
+Metrics are computed in original workload units. Mean Squared Error (MSE) and
+Mean Absolute Error (MAE) are
+\begin{equation}
+\mathrm{MSE}=\frac{1}{N}\sum_{i=1}^{N}(y_i-\hat{y}_i)^2,\qquad
+\mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}|y_i-\hat{y}_i|.
+\label{eq:mse}
+\end{equation}  
+Spike MSE restricts the sum to spike observations ($s_i=1$), and the
+underprediction rate is $UR=\frac{1}{N}\sum_i I(y_i>\hat{y}_i)$; spike MAE and
+spike underprediction are defined analogously.
+
+\textbf{Spike labels.} The spike annotations are dependent on the pipeline. In the case of the LSTM ablation, a spike occurs when the change in the input from the last observation is larger than the 95 th percentile of change within training windows. In the LSTMD and HBNN evaluations, a spike is a positive rise relative
+to the last observed value above the 95th percentile of one-step positive rises
+over the first 80\% of the trace. Spike-period results are therefore not
+directly comparable across model families.
+
+\subsection{Service-Level Measures}\label{service-level-metrics-1}
+
+For the probabilistic models, the upper bound is a one-sided Gaussian quantile,
+\begin{equation}
+U_{\gamma,i}=\max\!\big(\mu_i+z_\gamma\,\sigma_i,\;0\big),\qquad z_\gamma=\Phi^{-1}(\gamma),
+\end{equation}
+where $\sigma_i$ is the predicted standard deviation for LSTMD and, for HBNN,
+the root of aleatoric plus epistemic variance from 100 stochastic forward
+passes. We report SR, TPR and the calibration error (gap between realized SR and
+target, in percentage points). SR and TPR are not computed for the point
+forecast LSTM, which has no predictive distribution in our implementation.
+
+%==============================================================
+\section{Results and Analysis}\label{results-and-analysis}
+
+\subsection{Reproducing Results}\label{reproducing-results}
+
+Table~\ref{tab:repro} compares the original results~\cite{ref1} with ours.Fourteen of sixteen LSTMD values are lower than the baseline. Two models have a value 10\% higher than baseline (S-U memory MSE, MAE). However, due to differences in configuration (11 rather than 12 traces, 1 seed and different tuning budget), these are not improvements and are provided for comparison only. Finally, the S-B-LSTM values are 3-4 times larger than baseline as this row comes from the broader ablation LSTM. The results for the HBNNs are variable, since all models were trained with the same hyperparameters. In addition, the error rates of the multi-trace CPU model (0.0198) and M-B memory model (0.0179) are higher than those previously published (between 0.004 and 0.005). For this reason, the comparison of the anomaly aware HBNNs is descriptive.
+
+\begin{table*}[!t]
+\caption{Results from the original study~\cite{ref1} and from our reproduction.
+$^\dagger$Equals the \emph{raw\_mse} baseline of the LSTM ablation (wider architecture, 70/10/20 split).}
+\label{tab:repro}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Model} &
+\shortstack{\textbf{Reported}\\\textbf{CPU MSE}} &
+\shortstack{\textbf{Reported}\\\textbf{CPU MAE}} &
+\shortstack{\textbf{Reported}\\\textbf{Mem. MSE}} &
+\shortstack{\textbf{Reported}\\\textbf{Mem. MAE}} &
+\shortstack{\textbf{Reproduced}\\\textbf{CPU MSE}} &
+\shortstack{\textbf{Reproduced}\\\textbf{CPU MAE}} &
+\shortstack{\textbf{Reproduced}\\\textbf{Mem. MSE}} &
+\shortstack{\textbf{Reproduced}\\\textbf{Mem. MAE}} \\
+\midrule
+S-U-LSTM   & 0.0041 & 0.0457 & 0.0042 & 0.0425 & 0.0043 & 0.0476 & 0.0045 & 0.0443 \\
+S-U-LSTMD  & 0.0040 & 0.0455 & 0.0041 & 0.0420 & 0.0032 & 0.0396 & 0.0046 & 0.0457 \\
+S-U-HBNN   & 0.0047 & 0.0502 & 0.0044 & 0.0455 & 0.0601 & 0.1947 & 0.0602 & 0.1926 \\
+S-B-LSTM$^\dagger$   & 0.0047 & 0.0500 & 0.0054 & 0.0487 & 0.0169 & 0.0923 & 0.0193 & 0.1026 \\
+S-B-LSTMD  & 0.0061 & 0.0556 & 0.0088 & 0.0631 & 0.0032 & 0.0400 & 0.0032 & 0.0367 \\
+S-B-HBNN   & 0.0299 & 0.1285 & 0.0386 & 0.1533 & 0.0328 & 0.1334 & 0.0348 & 0.1426 \\
+M-U-LSTM   & 0.0044 & 0.0474 & 0.0048 & 0.0447 & 0.0042 & 0.0467 & 0.0042 & 0.0430 \\
+M-U-LSTMD  & 0.0041 & 0.0464 & 0.0044 & 0.0439 & 0.0031 & 0.0393 & 0.0030 & 0.0353 \\
+M-U-HBNN   & 0.0047 & 0.0485 & 0.0052 & 0.0498 & 0.0198 & 0.0917 & 0.0029 & 0.0353 \\
+M-B-LSTM   & 0.0044 & 0.0479 & 0.0044 & 0.0438 & 0.0047 & 0.0490 & 0.0046 & 0.0444 \\
+M-B-LSTMD  & 0.0046 & 0.0446 & 0.0046 & 0.0446 & 0.0031 & 0.0393 & 0.0030 & 0.0359 \\
+M-B-HBNN   & 0.0042 & 0.0471 & 0.0043 & 0.0436 & 0.0198 & 0.0914 & 0.0179 & 0.0841 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Anomaly-Aware LSTM Ablation}\label{anomaly-aware-lstm-ablation}
+
+The ablation covers eleven traces, three seeds and both resources: four
+configurations (\emph{raw\_mse}; \emph{score\_mse}; \emph{score\_mild1}, severity
+scores with $\alpha=1.25,\lambda=0.25$; \emph{all\_mse}), i.e.\ 132 model fits and
+264 result rows.
+
+\begin{figure}[!t]
+\centering
+\figimg{01_error_metric_ratios.png}
+\caption{Average paired ratios of overall and spike test error, normalized to
+the raw-feature MSE baseline. Values below one indicate improvement.}
+\label{fig:errors}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\figimg{02_underprediction_ratios.png}
+\caption{Mean paired ratios for overall and spike underprediction rates.
+Values above one indicate an increase in underprediction.}
+\label{fig:underpred}
+\end{figure}
+
+Results are in Table~\ref{tab:ablation} and Figs.~\ref{fig:errors} and~\ref{fig:underpred}.
+\emph{score\_mild1} was best on the test set: overall MSE fell by 7.70\% and MAE
+by 6.34\%, spike MSE by 7.82\% and spike MAE by 5.56\%, and the overall
+underprediction rate by 7.33\%, while the spike underprediction rate rose by
+2.38\%. It is the best of four shortlisted configurations compared on the test
+set, so its advantage is subject to a selection effect.
+
+The improvement is consistent but not statistically significant at the trace
+level: the 95\% interval for the mean MSE ratio is 0.78--1.05, \emph{score\_mild1}
+is below one on 8 of 11 traces (Table~\ref{tab:pertrace}; sign test $p=0.23$),
+and a Wilcoxon signed-rank test on per-trace log-ratios gives $p=0.21$
+(\emph{score\_mse} 0.46, \emph{all\_mse} 0.37). It has lower MSE in 43 of 66
+trace$\times$seed$\times$resource pairs (65\%); treating these pairs as independent
+gives $p=0.005$, but pairs within a trace are correlated, so we regard the
+trace-level test as the conservative one. The gain is uneven: large on gc19\_f
+(0.52) and gc19\_b (0.67), but the ratio exceeds one on gc19\_g (1.31) and ali20\_g
+(1.21). Spike underestimation increased (1.024, 1.024, 1.066) across all anomaly-aware models. This indicates that on average accuracy is improved more by the inputs than spike timing. Furthermore, it suggests that spikes predicted from previous increases may be delayed compared to the true spike times.
+
+\textbf{Baseline strength.} The ablation baseline is weak: \emph{raw\_mse} reaches
+a test MSE of about 0.0169 (CPU) and 0.0193 (memory), against about 0.0042--0.0047
+for the reference-style LSTM on the same final 20\% of each trace, and many fits
+stopped after 13 epochs (patience 12). Even \emph{score\_mild1} (about 0.0157)
+remains roughly 3.5 times the reference-style error, so the relative gains should
+not be read as evidence for a well-tuned LSTM.
+
+\begin{table}[!t]
+\caption{LSTM ablation: mean paired test-metric ratios relative to the
+raw-feature MSE baseline (below one is better).}
+\label{tab:ablation}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Configuration & MSE & MAE & \shortstack[r]{Spike\\MSE} & \shortstack[r]{Spike\\MAE} & \shortstack[r]{Underpred.\\Rate} & \shortstack[r]{Spike Underpred.\\Rate} \\
+\midrule
+raw\_mse & 1.0000 & 1.0000 & 1.0000 & 1.0000 & 1.0000 & 1.0000 \\
+score\_mse & 0.9449 & 0.9553 & 0.9634 & 0.9698 & 0.9645 & 1.0237 \\
+score\_mild1 & 0.9230 & 0.9366 & 0.9218 & 0.9444 & 0.9267 & 1.0238 \\
+all\_mse & 0.9346 & 0.9492 & 0.9971 & 0.9919 & 1.0061 & 1.0657 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[!t]
+\caption{Per-trace overall MSE ratio relative to \emph{raw\_mse} (mean over
+seeds and resources). Trace-level Wilcoxon $p$: \emph{score\_mse} 0.46,
+\emph{score\_mild1} 0.21, \emph{all\_mse} 0.37.}
+\label{tab:pertrace}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lrrr}
+\toprule
+Trace & score\_mse & score\_mild1 & all\_mse \\
+\midrule
+gc11 & 1.078 & 0.992 & 1.170 \\
+gc19\_a & 0.874 & 0.937 & 1.031 \\
+gc19\_b & 0.711 & 0.674 & 0.707 \\
+gc19\_c & 0.869 & 0.840 & 0.982 \\
+gc19\_d & 0.774 & 0.688 & 0.878 \\
+gc19\_e & 1.165 & 0.990 & 0.909 \\
+gc19\_f & 0.539 & 0.523 & 0.415 \\
+gc19\_g & 1.192 & 1.311 & 1.394 \\
+gc19\_h & 1.090 & 1.053 & 0.705 \\
+ali20\_c & 0.991 & 0.939 & 0.964 \\
+ali20\_g & 1.110 & 1.206 & 1.124 \\
+\midrule
+Mean; traces $<1$ & 0.945; 6 & 0.923; 8 & 0.935; 7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Anomaly-Aware LSTMD}\label{anomaly-aware-lstmd}
+
+LSTMD was trained with raw and anomaly-aware inputs on the same eleven traces
+(64/16/20 split, reference hyperparameters, Gaussian negative log-likelihood).
+In multi-trace settings the MSE ratio stays between 0.97 and 1.00, while S-B MSE
+rises by about 12\%. Table~\ref{tab:lstmd} gives accuracy, and Table~\ref{tab:lstmd-sl} and
+Fig.~\ref{fig:lstmd} show service-level behavior: multi-trace configurations reach service rates near
+95\% at the 95\% target with TPR around 113--115\%, and about 98.2\% at the 99\%
+target with TPR around 120--121\%, with calibration error at most 1.5
+percentage points. With anomaly aware inputs, TPR decreases slightly (121.7\% to 113.4\%). However, this decrease is largely driven by a single trace (gc19_e memory), removing this trace gives TPR values of 113.7\% and 113.4\%, respectively. SR decreases from 94.7\% to 93.7\%. The additional cost of anomaly channels is small. M-B only took 807 seconds to train, S-B was approximately 15 seconds longer, and S-U had little difference in training time. Inference was between 12-15 seconds per trace.
+
+\begin{table}[!t]
+\caption{LSTMD with and without anomaly-aware inputs, mean over eleven traces
+(one run per trace). R: raw; A: anomaly-aware; S: spike; SUP: spike
+underprediction (\%), the share of spike points where the mean forecast is
+below actual demand.}
+\label{tab:lstmd}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llrrrrrrrr}
+\toprule
+Config. & Res. & MSE-R & MSE-A & MAE-R & MAE-A & SMSE-R & SMSE-A & SUP-R & SUP-A \\
+\midrule
+S-U & CPU  & 0.0032 & 0.0035 & 0.040 & 0.042 & 0.0103 & 0.0106 & 99.5 & 98.8 \\
+S-U & Mem. & 0.0046 & 0.0030 & 0.046 & 0.036 & 0.0099 & 0.0090 & 90.4 & 99.1 \\
+S-B & CPU  & 0.0032 & 0.0036 & 0.040 & 0.043 & 0.0089 & 0.0086 & 97.1 & 94.7 \\
+S-B & Mem. & 0.0032 & 0.0036 & 0.037 & 0.040 & 0.0088 & 0.0092 & 97.5 & 97.5 \\
+M-U & CPU  & 0.0031 & 0.0031 & 0.039 & 0.039 & 0.0119 & 0.0112 & 99.6 & 99.5 \\
+M-U & Mem. & 0.0030 & 0.0029 & 0.035 & 0.035 & 0.0096 & 0.0094 & 99.0 & 99.2 \\
+M-B & CPU  & 0.0031 & 0.0030 & 0.039 & 0.039 & 0.0099 & 0.0104 & 98.2 & 98.8 \\
+M-B & Mem. & 0.0030 & 0.0030 & 0.036 & 0.036 & 0.0094 & 0.0080 & 98.7 & 98.9 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure*}[!t]
+\centering
+\figimgw{lstmd_fig_summary.png}
+\caption{LSTMD with raw and anomaly-aware inputs. (a) Paired ratio of overall
+MSE and spike MSE for CPU and memory (below one favors anomaly-aware inputs;
+error bars: standard error over eleven traces). (b) Realized success rate vs.\
+target service level (dotted: perfect calibration). (c) Total predicted resources
+vs.\ realized SR. Dashed: raw; solid: anomaly-aware.}
+\label{fig:lstmd}
+\end{figure*}
+
+\begin{table}[!t]
+\caption{Service-level behavior of the LSTMD upper bound (mean over CPU,
+memory and eleven traces). Cal.: calibration error in percentage points.}
+\label{tab:lstmd-sl}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llrrrrr}
+\toprule
+Config. & Input & \shortstack[r]{95\% target\\SR} & \shortstack[r]{95\% target\\TPR} & \shortstack[r]{99\% target\\SR} & \shortstack[r]{99\% target\\TPR} & \shortstack[r]{Cal.\\(pp)} \\
+\midrule
+S-U & Raw     & 94.7 & 121.7 & 98.1 & 130.0 & 1.06 \\
+S-U & Anomaly & 93.7 & 113.4 & 97.6 & 119.2 & 1.21 \\
+S-B & Raw     & 94.7 & 114.5 & 98.0 & 120.5 & 0.62 \\
+S-B & Anomaly & 94.3 & 114.8 & 97.9 & 120.8 & 0.70 \\
+M-U & Raw     & 94.7 & 113.7 & 98.1 & 119.7 & 0.61 \\
+M-U & Anomaly & 94.6 & 113.9 & 98.1 & 119.8 & 0.99 \\
+M-B & Raw     & 95.1 & 114.8 & 98.2 & 121.1 & 0.69 \\
+M-B & Anomaly & 94.9 & 114.7 & 98.2 & 120.6 & 1.48 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Anomaly-Aware HBNN}\label{anomaly-aware-hbnn}
+
+For multi-trace HBNN, anomaly-aware inputs lower both error and provisioning
+cost (Tables~\ref{tab:hbnn} and~\ref{tab:hbnn-sl}, Figs.~\ref{fig:hbnn-ratio} and~\ref{fig:hbnn-service}):
+at the 95\% target, TPR falls from 129.4\% to 116.4\% for M-B and from 122.3\% to
+115.6\% for M-U, SR rises from 93.7\% to 95.8\% (M-B) and from 95.0\% to 95.8\%
+(M-U), and calibration error drops from 3.73 to 2.15 and from 2.92 to 1.87
+percentage points. For S-U, TPR increases (217.9\% to 231.8\%), and S-B improves
+slightly (156.2\% to 150.6\%).
+
+\subsection{Discussion}\label{discussion}
+
+These gains need careful reading. The raw multi-trace CPU MSE (0.0198 for M-U and
+M-B) and M-B memory MSE (0.0179) are several times the anomaly-aware values
+(about 0.003) and the published 0.004--0.005. Over the 66
+trace$\times$seed$\times$resource pairs per configuration, the mean paired MSE
+ratio is 0.72 for M-B and 0.83 for M-U but the medians are 1.01 and 0.99, so the
+multi-trace gains come mainly from runs where the raw model has very large
+errors; single-trace configurations are mixed (mean/median 1.27/0.96 for S-U and
+1.04/0.87 for S-B). Spike underprediction also rises for multi-trace models
+(e.g.\ M-B CPU from 89.9\% to 98.6\%). With shared untuned hyperparameters, a
+different detector implementation and detector fitting that extends into
+validation, these results should be confirmed with a tuned raw baseline and a
+training-only detector fit. Overall, anomaly information does not benefit every
+model or configuration, but the direction is consistent where baselines are
+well-behaved.
+
+\begin{table}[!t]
+\caption{HBNN with and without anomaly-aware inputs, mean over eleven traces
+and three seeds. R: raw; A: anomaly-aware; S: spike; SUP: spike underprediction (\%).}
+\label{tab:hbnn}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llrrrrrrrr}
+\toprule
+Config. & Res. & MSE-R & MSE-A & MAE-R & MAE-A & SMSE-R & SMSE-A & SUP-R & SUP-A \\
+\midrule
+S-U & CPU  & 0.0601 & 0.0607 & 0.195 & 0.193 & 0.0641 & 0.0675 & 89.8 & 91.7 \\
+S-U & Mem. & 0.0602 & 0.0537 & 0.193 & 0.173 & 0.0727 & 0.0643 & 87.5 & 86.5 \\
+S-B & CPU  & 0.0328 & 0.0261 & 0.133 & 0.115 & 0.0373 & 0.0312 & 75.7 & 78.7 \\
+S-B & Mem. & 0.0348 & 0.0268 & 0.143 & 0.119 & 0.0413 & 0.0340 & 76.6 & 81.7 \\
+M-U & CPU  & 0.0198 & 0.0031 & 0.092 & 0.039 & 0.0222 & 0.0095 & 89.5 & 98.8 \\
+M-U & Mem. & 0.0029 & 0.0029 & 0.035 & 0.035 & 0.0095 & 0.0092 & 99.2 & 99.4 \\
+M-B & CPU  & 0.0198 & 0.0031 & 0.091 & 0.040 & 0.0225 & 0.0102 & 89.9 & 98.6 \\
+M-B & Mem. & 0.0179 & 0.0031 & 0.084 & 0.037 & 0.0234 & 0.0089 & 90.0 & 97.8 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[!t]
+\caption{Service-level behavior of the HBNN upper bound (mean over CPU and
+memory, eleven traces, three seeds). Cal.: calibration error (pp); Epist.:
+epistemic share of predictive variance (\%).}
+\label{tab:hbnn-sl}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llrrrrrr}
+\toprule
+Config. & Input & \shortstack[r]{95\% target\\SR} & \shortstack[r]{95\% target\\TPR} & \shortstack[r]{99\% target\\SR} & \shortstack[r]{99\% target\\TPR} & \shortstack[r]{Cal.\\(pp)} & \shortstack[r]{Epist.\\(\%)} \\
+\midrule
+S-U & Raw     & 99.2 & 217.9 & 99.8 & 277.1 & 3.68 & 22.9 \\
+S-U & Anomaly & 99.1 & 231.8 & 99.8 & 296.3 & 3.73 & 26.2 \\
+S-B & Raw     & 95.9 & 156.2 & 99.4 & 183.9 & 3.44 & 12.8 \\
+S-B & Anomaly & 95.6 & 150.6 & 99.1 & 175.7 & 3.59 & 16.7 \\
+M-U & Raw     & 95.0 & 122.3 & 98.6 & 132.0 & 2.92 & 2.3 \\
+M-U & Anomaly & 95.8 & 115.6 & 98.5 & 121.9 & 1.87 & 3.4 \\
+M-B & Raw     & 93.7 & 129.4 & 98.7 & 142.5 & 3.73 & 0.7 \\
+M-B & Anomaly & 95.8 & 116.4 & 98.4 & 123.0 & 2.15 & 5.7 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure*}[!t]
+\centering
+\figimgw{hbnn_fig_ratio.pdf}
+\caption{HBNN paired ratios (anomaly-aware / raw) for MSE, MAE and
+under-prediction rate, by configuration, for (a) CPU and (b) memory. Values
+below one favor anomaly-aware inputs.}
+\label{fig:hbnn-ratio}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\figimgw{hbnn_fig_service.png}
+\caption{Service-level performance of the HBNN upper prediction bound:
+(a) calibration and (b) total predicted resources vs.\ realized SR. Solid:
+anomaly-aware; dashed: raw.}
+\label{fig:hbnn-service}
+\end{figure*}
+
+\subsection{Limitations}\label{limitations}
+
+\begin{itemize}
+\item \textbf{Attribution and significance.} Raw features with the asymmetric
+loss were not evaluated on the test set, so the \emph{score\_mild1} gain cannot be
+split between features and loss; the trace-level interval includes one
+($p=0.21$), and the best of four configurations was picked from a
+hand-chosen shortlist.
+\item \textbf{Baselines.} The ablation baseline is about 3.5 times worse than a
+reference-style LSTM, and the raw HBNN baseline used one shared hyperparameter
+set and did not reproduce published results for several configurations. No
+non-neural or quantile-loss baseline was compared.
+\item \textbf{Proxy spike labels.} Spike labels come from thresholding
+workload changes and are defined differently in the LSTM and LSTMD/HBNN
+pipelines (Section~\ref{point-forecast-measures}).
+\item \textbf{Protocol differences.} The LSTM ablation used a wider architecture
+and a 70/10/20 split versus 64/16/20 for LSTMD/HBNN; LSTMD used one run per trace,
+LSTM and HBNN three seeds; the HBNN detector is a separate implementation, and
+detector fitting for LSTMD and HBNN extended into validation.
+\item \textbf{Scope.} No LSTM service-level results (no predictive upper bound),
+Alibaba 2018 excluded, fixed detector settings, 100 Monte Carlo samples and a
+ten-minute horizon.
+\end{itemize}
+
+%==============================================================
+\section{Conclusion and Future Work}\label{conclusion-and-future-work}
+
+We implemented LSTM, LSTMD and HBNN workload forecasters following~\cite{ref1}
+and showed how anomaly-aware inputs affect both point and uncertainty-aware
+forecasting. A four-detector pipeline consisting of robust Z-score, jump detection, EMA
+residual and Isolation Forest produced binary flags and severity scores, and a
+mildly asymmetric spike-aware loss was evaluated for the LSTM.
+
+The strongest LSTM configuration, severity scores with a mildly asymmetric loss
+($\alpha=1.25$, $\lambda=0.25$), reduced overall MSE by 7.70\%, MAE by 6.34\%,
+spike MSE by 7.82\% and overall underprediction by 7.33\%, improving MSE on 8 of
+11 traces and by up to 48\% on gc19\_f, at the cost of only extra input channels.
+Anomaly aware inputs reduced resource requirements below a 95\% service level by 129.4\% (multi-trace HBNN) to 116.4\% of demand, while delivering improved service rates. LSTMD model calibration remained within 1.5\% of demand. This indicates that including anomaly aware inputs is an effective and inexpensive improvement to workload forecasting in cloud environments.Gains vary across traces. The gain from the LSTM method (95\% confidence interval [0.78, 1.05]) is not statistically significant across 11 traces. Under-prediction of spikes does not improve. Improvements can be made to baseline methods. To confirm the effect, we will produce a well-tuned baseline and fit a training-only detector. 
+
+(i)~Further ablation studies using raw features, an asymmetric loss function, and a well-tuned LSTM baseline. Paired tests should be run on a larger number of seeds. (ii)~Re-run HBNN with well tuned hyper-parameters and a training only single detector model. (iii)~Bounding predictions as well as quantiles (SR/TPR) for the LSTM, with adaptive safety margins based on recent variations of volatility and severity. (iv)~Asymmetric/robust loss functions for probabilistic models. (v)~Long time horizons and transferring knowledge between traces.
+
+\begin{thebibliography}{99}
+\bibitem{ref1} A. Rossi, A. Visentin, D. Carraro, S. Prestwich, and K. N. Brown, ``Forecasting workload in cloud computing: Towards uncertainty-aware predictions and transfer learning,'' \textit{Cluster Comput.}, vol. 28, Art. no. 258, 2025, doi: 10.1007/s10586-024-04933-2.
+\bibitem{ref2} P. A. Dinda and D. R. O'Hallaron, ``Host load prediction using linear models,'' \textit{Cluster Comput.}, vol. 3, pp. 265--280, 2000.
+\bibitem{ref3} R. N. Calheiros, E. Masoumi, R. Ranjan, and R. Buyya, ``Workload prediction using ARIMA model and its impact on cloud applications' QoS,'' \textit{IEEE Trans. Cloud Comput.}, vol. 3, no. 4, pp. 449--458, 2015.
+\bibitem{ref4} J. Gao, H. Wang, and H. Shen, ``Machine learning based workload prediction in cloud computing,'' in \textit{Proc. 29th Int. Conf. Comput. Commun. Netw. (ICCCN)}, 2020, pp. 1--9.
+\bibitem{ref5} B. Song, Y. Yu, Y. Zhou, Z. Wang, and S. Du, ``Host load prediction with long short-term memory in cloud computing,'' \textit{J. Supercomput.}, vol. 74, no. 12, pp. 6554--6568, 2018.
+\bibitem{ref6} J. Bi, S. Li, H. Yuan, and M. Zhou, ``Integrated deep learning method for workload and resource prediction in cloud systems,'' \textit{Neurocomputing}, vol. 424, pp. 35--48, 2021.
+\bibitem{ref7} H. L. Leka, Z. Fengli, A. T. Kenea, A. T. Tegene, P. Atandoh, and N. W. Hundera, ``A hybrid CNN-LSTM model for virtual machine workload forecasting in cloud data center,'' in \textit{Proc. 18th Int. Comput. Conf. Wavelet Active Media Technol. Inf. Process. (ICCWAMTIP)}, 2021, pp. 474--478.
+\bibitem{ref8} E. Patel and D. S. Kushwaha, ``A hybrid CNN-LSTM model for predicting server load in cloud computing,'' \textit{J. Supercomput.}, 2022.
+\bibitem{ref9} S. Arbat, V. K. Jayakumar, J. Lee, W. Wang, and I. K. Kim, ``Wasserstein adversarial transformer for cloud workload prediction,'' in \textit{Proc. AAAI Conf. Artif. Intell.}, vol. 36, no. 11, 2022, pp. 12433--12439.
+\bibitem{ref10} I. K. Kim, W. Wang, Y. Qi, and M. Humphrey, ``Forecasting cloud application workloads with CloudInsight for predictive resource management,'' \textit{IEEE Trans. Cloud Comput.}, 2020.
+\bibitem{ref11} J. Bao, C. Yang, N. Xia, and D. Shen, ``Long-term workload forecasting in grid cloud using deep ensemble model,'' in \textit{Proc. 10th Int. Conf. Adv. Cloud Big Data (CBD)}, 2022, pp. 42--47.
+\bibitem{ref12} D. Minarolli, A. Mazrekaj, and B. Freisleben, ``Tackling uncertainty in long-term predictions for host overload and underload detection in cloud computing,'' \textit{J. Cloud Comput.}, vol. 6, no. 1, pp. 1--18, 2017.
+\bibitem{ref13} P. M. Mammen, N. Bashir, R. R. Kolluri, E. K. Lee, and P. Shenoy, ``CUFF: A configurable uncertainty-driven forecasting framework for green AI clusters,'' in \textit{Proc. 14th ACM Int. Conf. Future Energy Syst. (e-Energy)}, 2023, pp. 266--270.
+\bibitem{ref14} D. A. Nix and A. S. Weigend, ``Estimating the mean and variance of the target probability distribution,'' in \textit{Proc. IEEE Int. Conf. Neural Netw. (ICNN)}, 1994.
+\bibitem{ref15} C. Blundell, J. Cornebise, K. Kavukcuoglu, and D. Wierstra, ``Weight uncertainty in neural networks,'' in \textit{Proc. Int. Conf. Mach. Learn. (ICML)}, 2015.
+\bibitem{ref16} A. Rossi, A. Visentin, S. Prestwich, and K. N. Brown, ``Bayesian uncertainty modelling for cloud workload prediction,'' in \textit{Proc. IEEE 15th Int. Conf. Cloud Comput. (CLOUD)}, 2022, pp. 19--29.
+\bibitem{ref17} V. Chandola, A. Banerjee, and V. Kumar, ``Anomaly detection: A survey,'' \textit{ACM Comput. Surv.}, vol. 41, no. 3, 2009.
+\bibitem{ref18} F. T. Liu, K. M. Ting, and Z.-H. Zhou, ``Isolation forest,'' in \textit{Proc. IEEE Int. Conf. Data Mining (ICDM)}, 2008.
+\end{thebibliography}
+
+\end{document}

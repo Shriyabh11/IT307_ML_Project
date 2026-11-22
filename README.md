@@ -13,8 +13,7 @@ This project investigates deep learning and uncertainty-aware workload forecasti
 IT307_ML_Project/
 ├── README.md                                          # Master documentation (Baseline + Novelty)
 ├── reference_paper/                                   # Reference Research Paper (Rossi et al., 2025)
-│   ├── Rossi2025_Forecasting_Workload_in_Cloud_Computing.pdf
-│   └── s10586-024-04933-2.pdf
+│   └── Rossi2025_Forecasting_Workload_in_Cloud_Computing.pdf
 │
 ├── baseline/                                          # BASELINE SYSTEM (Rossi et al., 2025)
 │   ├── README_BASELINE_REPO.md                        # Original repository README
@@ -33,11 +32,7 @@ IT307_ML_Project/
 │   │   ├── multibivariate/                            # Bivariate multi-trace hyperparams
 │   │   ├── multiunivariate/                           # Univariate multi-trace hyperparams
 │   │   └── univariate/                                # Univariate single-trace hyperparams
-│   ├── util/                                          # Core modules (custom_keras, dataset, metrics, plots)
-│   └── results/                                       # Baseline experimental outputs
-│       ├── lstm/                                      # Baseline LSTM 11 publication figures + 49 data CSVs
-│       ├── lstmd/                                     # Baseline LSTMD 38 analytical figures + contact sheet
-│       └── hbnn/                                      # Baseline HBNN error tables, runtimes & plots
+│   └── util/                                          # Core modules (custom_keras, dataset, metrics, plots)
 │
 ├── code/                                              # NOVELTY CODE PIPELINE
 │   ├── anomaly_detection_dataset_generation.ipynb     # Step 1: Anomaly detector & flag generator notebook
@@ -47,10 +42,8 @@ IT307_ML_Project/
 │   └── hbnn_workload_forecasting.ipynb                # Novelty Model 3: Anomaly-Aware Bayesian HBNN
 │
 ├── dataset/                                           # TRACE DATASETS
-│   ├── preprocessed_without_anomalies.zip             # Anomaly-flagged traces (Novelty inputs)
-│   ├── with_anomalies.zip                             # Raw time-series traces (Baseline inputs)
-│   ├── preprocessed_without_anomalies/               # Extracted CSV traces
-│   └── with_anomalies/                               # Extracted raw CSV traces
+│   ├── preprocessed_without_anomalies/               # Extracted CSV traces (Novelty inputs)
+│   └── with_anomalies/                               # Extracted raw CSV traces (Baseline inputs)
 │
 └── results/                                           # ALL EXPERIMENTAL RESULTS
     ├── README.md                                      # Guide comparing Baseline vs Novelty results

@@ -7,6 +7,43 @@ This project investigates deep learning and uncertainty-aware workload forecasti
 
 ---
 
+## Problem Statement
+
+In large-scale cloud data centers (like Google Cloud and Alibaba Cloud), resource managers must forecast incoming CPU and memory demand a few minutes ahead of time. Accurate forecasting allows the system to spin up or shut down servers dynamically, saving energy and cost while preventing application crashes.
+
+However, conventional forecasting models face a critical operational challenge:
+- **Chronic Peak Under-Prediction**: Normal workload patterns are relatively smooth, but real cloud environments regularly experience sudden bursts (flash crowds, batch compute jobs, system failovers). Standard machine learning models (such as baseline LSTM, LSTMD, and HBNN) trained on smooth historical data severely **under-predict** during these critical spikes.
+- **The Real-World Cost**: Under-predicting demand causes server CPU saturation, application lag, dropped user requests, and Service Level Objective (SLO) violations. Over-predicting to compensate leads to massive over-provisioning and wasted electricity.
+
+---
+
+## What We Did (Our Solution)
+
+Rather than forcing deep models to predict purely from raw CPU and memory time-series, we introduced an **Anomaly-Aware Forecasting Framework**:
+1. **Detect Abnormal Regimes Early**: We built an automated, unsupervised anomaly detection pipeline that analyzes historical rolling windows.
+2. **Multi-Channel Conditioning**: Whenever the system detects abnormal behavior or erratic fluctuations, it generates auxiliary feature signals (binary flags, continuous severity scores, and spike jump indicators) and feeds them directly into the deep forecasting models as extra input channels.
+3. **Multi-Model Benchmark**: We evaluated whether giving models explicit "anomaly awareness" improves forecasting across three model architectures:
+   - **Deterministic LSTM**: Point forecasts with balanced penalty for under-prediction.
+   - **Probabilistic LSTMD**: Gaussian distribution forecasting to estimate aleatoric uncertainty.
+   - **Bayesian Neural Network (HBNN)**: Quantifies both aleatoric (data noise) and epistemic (model uncertainty) bounds.
+
+---
+
+## What Our Anomalies Are
+
+In this project, an "anomaly" is not just arbitrary synthetic noise. It represents a real operational deviation in cluster traces:
+- **Sudden Workload Spikes**: Rapid surges where CPU or memory usage shoots significantly above the local moving trend.
+- **Volatility Bursts**: Sudden jumps in variance where demand rapidly fluctuates between high and low values.
+- **Regime Shifts**: Periods where workload dynamics fundamentally shift away from steady-state behavior.
+
+### How Anomalies Are Detected & Represented
+We generate three auxiliary channels for each time step using an ensemble voting mechanism (Rolling MAD, Robust Z-scores, Jump differences, and an Isolation Forest):
+- **`_flag` (Binary Anomaly Flag)**: A 0 or 1 indicator showing whether multiple statistical detectors and the Isolation Forest agreed that the current time step is anomalous.
+- **`_score` (Continuous Severity Score)**: A normalized score from 0.0 to 1.0 quantifying how severe or unusual the anomaly is, helping models scale their predictions proportionally.
+- **`_spike_eval` (Sudden Jump Indicator)**: A dedicated metric flagging rapid positive changes (jumps) in resource utilization to specifically evaluate model responsiveness to sudden surges.
+
+---
+
 ## Unified Project Structure
 
 ```text

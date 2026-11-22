@@ -1,8 +1,8 @@
-# IT307 Machine Learning Project: Cloud Workload Forecasting (Baseline & Novelty)
+# IT307 Machine Learning Project: Cloud Workload Forecasting
 
 ## Project Overview
 This project investigates deep learning and uncertainty-aware workload forecasting for cloud resource management across Google and Alibaba Cloud cluster traces. It comprises:
-1. **The Baseline System**: Complete reproduction of the benchmark paper *"Forecasting workload in cloud computing: towards uncertainty-aware predictions and transfer learning"* (Rossi et al., *Cluster Computing*, 2025) sourced from [`grass-overflow/ML_Proj`](https://github.com/grass-overflow/ML_Proj) and our standalone baseline notebooks for **LSTM**, **LSTMD**, and **HBNN**.
+1. **The Baseline System**: Complete reproduction of the benchmark paper *"Forecasting workload in cloud computing: towards uncertainty-aware predictions and transfer learning"* (Rossi et al., *Cluster Computing*, 2025) for **LSTM**, **LSTMD**, and **HBNN**.
 2. **The Novelty System**: Our proposed **Anomaly-Aware Workload Forecasting Extension**, augmenting deep models (LSTM, LSTMD, HBNN) with multi-channel unsupervised anomaly detection indicators to alleviate chronic peak under-prediction and improve calibration.
 
 ---

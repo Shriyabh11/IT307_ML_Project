@@ -1,13 +1,13 @@
 # IT307 Machine Learning Project: Cloud Workload Forecasting (Baseline & Novelty)
 
-## 📌 Project Overview
+## Project Overview
 This project investigates deep learning and uncertainty-aware workload forecasting for cloud resource management across Google and Alibaba Cloud cluster traces. It comprises:
-1. **The Baseline System**: Complete reproduction of the benchmark paper *“Forecasting workload in cloud computing: towards uncertainty-aware predictions and transfer learning”* (Rossi et al., *Cluster Computing*, 2025) sourced from [`grass-overflow/ML_Proj`](https://github.com/grass-overflow/ML_Proj) and our standalone baseline notebooks for **LSTM**, **LSTMD**, and **HBNN**.
+1. **The Baseline System**: Complete reproduction of the benchmark paper *"Forecasting workload in cloud computing: towards uncertainty-aware predictions and transfer learning"* (Rossi et al., *Cluster Computing*, 2025) sourced from [`grass-overflow/ML_Proj`](https://github.com/grass-overflow/ML_Proj) and our standalone baseline notebooks for **LSTM**, **LSTMD**, and **HBNN**.
 2. **The Novelty System**: Our proposed **Anomaly-Aware Workload Forecasting Extension**, augmenting deep models (LSTM, LSTMD, HBNN) with multi-channel unsupervised anomaly detection indicators to alleviate chronic peak under-prediction and improve calibration.
 
 ---
 
-## 🗂️ Unified Project Structure
+## Unified Project Structure
 
 ```text
 IT307_ML_Project/
@@ -22,11 +22,9 @@ IT307_ML_Project/
 │   ├── code/                                          # Baseline Training & Benchmark Notebooks
 │   │   ├── lstm_workload_forecasting_baseline.ipynb   # Baseline LSTM standalone notebook (all 4 table configs + TPR vs SR)
 │   │   ├── lstmd_workload_forecasting_baseline.ipynb  # Baseline LSTMD standalone notebook (all 4 table configs)
-│   │   ├── hbnn_training.py                           # Baseline HBNN training script
-│   │   ├── HBNN_benchmark.ipynb                       # Baseline HBNN benchmark notebook
-│   │   ├── HBNN_Eval.ipynb & HBNN_PLOTS.ipynb         # Baseline HBNN evaluation & plot generation
-│   │   ├── lstm_training.py & lstmd_training.py       # Baseline LSTM / LSTMD runners
-│   │   └── LSTM_benchmark.ipynb & LSTMD_benchmark.ipynb
+│   │   ├── hbnn_workload_forecasting_baseline.ipynb   # Baseline HBNN standalone notebook (all 12 traces)
+│   │   ├── hbnn_training.py, lstm_training.py, lstmd_training.py # Baseline training runners
+│   │   └── hbnn_eval.ipynb, hbnn_plots.ipynb, compare_model_metrics.ipynb # Evaluation & plot notebooks
 │   ├── hyperparams/                                   # Paper-tuned hyperparameters (CSV)
 │   │   ├── bivariate/                                 # Bivariate single-trace hyperparams
 │   │   ├── multibivariate/                            # Bivariate multi-trace hyperparams
@@ -50,7 +48,7 @@ IT307_ML_Project/
     ├── baseline/                                      # BASELINE RESULTS (Rossi et al., 2025)
     │   ├── lstm/                                      # Baseline LSTM: 11 publication figures + 49 data CSVs
     │   ├── lstmd/                                     # Baseline LSTMD: 38 analytical figures + contact sheet
-    │   └── hbnn/                                      # Baseline HBNN: error tables, runtimes & plots
+    │   └── hbnn/                                      # Baseline HBNN: figures, error tables & runtimes
     └── novelty/                                       # NOVELTY RESULTS (Anomaly-Aware Framework)
         ├── lstm/                                      # Novelty LSTM: 23 generated plots, tables, notes + contact sheet
         ├── lstmd/                                     # Novelty LSTMD: 19 generated plots, case studies & LaTeX report
@@ -59,22 +57,23 @@ IT307_ML_Project/
 
 ---
 
-## 🔬 Model-by-Model Comparison
+## Model-by-Model Comparison
 
 ### 1. LSTM (Deterministic Forecaster)
 - **Baseline Notebook**: [`baseline/code/lstm_workload_forecasting_baseline.ipynb`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/baseline/code/lstm_workload_forecasting_baseline.ipynb)
-- **Baseline Results**: [`results/baseline/lstm/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/baseline/lstm) — 11 publication figures (heatmaps, experiment vs. paper, TPR vs. SR, calibration diagnostics, residual diagnostics, learning curves) + 49 data inventory CSVs. Visual index: [`contact_sheet.png`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/baseline/lstm/contact_sheet.png).
+- **Baseline Results**: [`results/baseline/lstm/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/baseline/lstm) — 11 publication figures (heatmaps, experiment vs. paper, TPR vs. SR, calibration diagnostics, residual diagnostics, learning curves) + 49 data inventory CSVs. Visual index: [`contact_sheet.png`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/baseline/lstm/figures/contact_sheet.png).
 - **Novelty Notebook**: [`code/lstm_workload_forecasting.ipynb`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/code/lstm_workload_forecasting.ipynb)
-- **Novelty Results (33 Files)**: [`results/novelty/lstm/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/lstm) — Paired anomaly/raw ratios, under-prediction penalties, signed prediction bias, and sensitivity across seeds. Visual index: [`CONTACT_SHEET.jpg`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/lstm/figures/CONTACT_SHEET.jpg).
+- **Novelty Results (33 Files)**: [`results/novelty/lstm/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/lstm) — Paired anomaly/raw ratios, under-prediction penalties, signed prediction bias, and sensitivity across seeds. Visual index: [`contact_sheet.jpg`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/lstm/figures/contact_sheet.jpg).
 
 ### 2. LSTMD (Probabilistic Forecaster)
 - **Baseline Notebook**: [`baseline/code/lstmd_workload_forecasting_baseline.ipynb`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/baseline/code/lstmd_workload_forecasting_baseline.ipynb)
 - **Baseline Results (38 Figures)**: [`results/baseline/lstmd/figures/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/baseline/lstmd/figures) — Heatmaps (`02_mse_heatmap_*.png`), Table 1 vs. paper (`05_table1_*.png`, `06_paper_comparison_*.png`), service rate curves (`08_service_rate_*.png`), TPR (`09_tpr_*.png`), and training logs (`13_training_history_*.png`). Visual index: [`contact_sheet.png`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/baseline/lstmd/figures/contact_sheet.png).
 - **Novelty Notebook**: [`code/lstmd_workload_forecasting.ipynb`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/code/lstmd_workload_forecasting.ipynb)
-- **Novelty Results (23 Files)**: [`results/novelty/lstmd/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/lstmd) — Includes direct paired ratio comparisons (`04_anomaly_raw_error_ratio.png`), spike detection case studies (`15_spike_detection_case_study.png`), and complete LaTeX publication report (`lstmd_results_section.tex`). Visual index: [`CONTACT_SHEET.jpg`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/lstmd/figures/CONTACT_SHEET.jpg).
+- **Novelty Results (23 Files)**: [`results/novelty/lstmd/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/lstmd) — Includes direct paired ratio comparisons (`04_anomaly_raw_error_ratio.png`), spike detection case studies (`15_spike_detection_case_study.png`), and complete LaTeX publication report (`lstmd_results_section.tex`). Visual index: [`contact_sheet.jpg`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/lstmd/figures/contact_sheet.jpg).
 
 ### 3. HBNN (Bayesian Neural Network)
-- **Baseline Script & Notebooks**: [`baseline/code/hbnn_training.py`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/baseline/code/hbnn_training.py), [`baseline/code/HBNN_benchmark.ipynb`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/baseline/code/HBNN_benchmark.ipynb)
-- **Baseline Results**: [`results/baseline/hbnn/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/baseline/hbnn) — Error CSVs, training times, and service rate curves.
+- **Baseline Standalone Notebook**: [`baseline/code/hbnn_workload_forecasting_baseline.ipynb`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/baseline/code/hbnn_workload_forecasting_baseline.ipynb)
+- **Baseline Script & Utilities**: [`baseline/code/hbnn_training.py`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/baseline/code/hbnn_training.py), [`baseline/code/hbnn_benchmark.ipynb`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/baseline/code/hbnn_benchmark.ipynb)
+- **Baseline Results**: [`results/baseline/hbnn/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/baseline/hbnn) — Figures (`service_confidence_vs_sr_ts80.png`, `service_tpr_vs_sr_ts80.png`), error CSVs, and training runtimes.
 - **Novelty Notebook**: [`code/hbnn_workload_forecasting.ipynb`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/code/hbnn_workload_forecasting.ipynb)
-- **Novelty Results (35 Files)**: [`results/novelty/hbnn/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/hbnn) — Direct paired ratios (`03_mse_paired_ratio.png`), uncertainty decomposition (`04_uncertainty_decomposition.png`), and spike MSE/under-prediction (`11_spike_mse.png`, `13_spike_underprediction.png`). Visual index: [`CONTACT_SHEET.jpg`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/hbnn/figures/CONTACT_SHEET.jpg).
+- **Novelty Results (35 Files)**: [`results/novelty/hbnn/`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/hbnn) — Direct paired ratios (`03_mse_paired_ratio.png`), uncertainty decomposition (`04_uncertainty_decomposition.png`), and spike MSE/under-prediction (`11_spike_mse.png`, `13_spike_underprediction.png`). Visual index: [`contact_sheet.jpg`](file:///C:/Users/shriy/.gemini/antigravity/scratch/IT307_ML_Project/results/novelty/hbnn/figures/contact_sheet.jpg).
